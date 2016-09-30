@@ -1,0 +1,108 @@
+[% USE Koha %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Catálogo en línea[% END %] Koha &rsaquo; Administración de su privacidad</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% BLOCK cssinclude %][% END %]
+</head>
+[% INCLUDE 'bodytag.inc' bodyid='opac-privacy' %]
+[% INCLUDE 'masthead.inc' %]
+
+<div class="main">
+ <ul class="breadcrumb">
+ <li><a href="/cgi-bin/koha/opac-main.pl">Inicio</a> <span class="divider">&rsaquo;</span></li>
+ <li><a href="/cgi-bin/koha/opac-user.pl">[% firstname %] [% surname %]</a> <span class="divider">&rsaquo;</span></li>
+ <li><a href="#">Su administración de privacidad</a></li>
+ </ul>
+
+ <div class="container-fluid">
+ <div class="row-fluid">
+ <div class="span2">
+ <div id="navigation">
+ [% INCLUDE 'navigation.inc' IsPatronPage=1 %]
+ </div>
+ </div>
+ <div class="span10">
+ <div id="userprivacy">
+ <h3>Su administración de privacidad</h3>
+
+ [% IF ( deleted ) %]
+ <div class="alert alert-success">Su historial de lectura ha sido eliminado.</div>
+ [% ELSIF ( err_history_not_deleted ) %]
+ <div class="alert">La eliminación de su historial de lectura ha fallado, esto es debido a una falla en la configuración de esta característica. Por favor ayude a arreglar el sistema informado a su bibliotecario de este error.</div>
+ [% END %]
+
+ [% IF ( privacy_updated ) %]
+ <div class="alert alert-success">Sus reglas de privacidad han sido actualizadas.</div>
+ [% END %]
+
+ [% IF ( Ask_data ) %]
+ <p>Nos preocupa mucho proteger su privacidad. En esta pantalla, puede definir durante cuanto tiempo preservar su historial de lectura.</p>
+ <p>Sus opciones son: <p>
+ <ul id="opac-privacy-options-list">
+ <li class="privacy0">Para siempre: almacenar mi historial de lecturas sin límite. Esta es la opción para usuarios que desean preservar qué están leyendo.</li>
+ <li class="privacy1">Predeterminado: guardar mi historial de lectura según leyes locales. Esta es la opción predeterminada: la biblioteca almacenará su historial de lectura durante el tiempo permitido por las leyes locales.</li>
+ <li class="privacy2">Nunca: Eliminar mi historial de lecturas inmediatamente. Esto eliminará todos registro de items prestados o devueltos.</li>
+ </ul>
+ <p id="note1">Por favor note que la información sobre cualquier libro prestado debe ser almacenada por la biblioteca independiente de que opción de privacidad elija.</p>
+ <p id="note2">Note por favor que el personal de la biblioteca no puede actualizar estos valores por usted: es su privacidad!</p>
+ <form action="/cgi-bin/koha/opac-privacy.pl" method="post" id="opac-privacy-update-form">
+ <input type="hidden" name="op" value="update_privacy" />
+ <fieldset>
+ <label for="privacy">Por favor elija su regla de privacidad:</label>
+ <div>
+ <select name="privacy" id="privacy">
+ [% IF ( privacy0 ) %]
+ <option value="0" selected="selected" class="privacy0">Siempre</option>
+ [% ELSE %]
+ <option value="0" class="privacy0">Siempre</option>
+ [% END %]
+ [% IF ( privacy1 ) %]
+ <option value="1" selected="selected" class="privacy1">Predeterminado</option>
+ [% ELSE %]
+ <option value="1" class="privacy1">Predeterminado</option>
+ [% END %]
+ [% IF ( privacy2 ) %]
+ <option value="2" selected="selected" class="privacy2">Nunca</option>
+ [% ELSE %]
+ <option value="2" class="privacy2">Nunca</option>
+ [% END %]
+ </select>
+ </div>
+
+ [% IF borrower.guarantorid && Koha.Preference('AllowPatronToSetCheckoutsVisibilityForGuarantor') %]
+ <div>
+ <label for="privacy_guarantor_checkouts">¿Permitir a su garante revisar sus préstamos actuales?</label>
+ <select name="privacy_guarantor_checkouts">
+ [% IF borrower.privacy_guarantor_checkouts %]
+ <option value="0">No</option>
+ <option value="1" selected>Sí</option>
+ [% ELSE %]
+ <option value="0" selected>No</option>
+ <option value="1">Sí</option>
+ [% END %]
+ </select>
+ <span class="hint">
+ Su garante es <i>[% borrower.guarantor.firstname %] [% borrower.guarantor.surname %]</i>
+ </span>
+ </div>
+ [% END %]
+
+ <button type="Submit" class="btn">Guardar</button>
+ </fieldset>
+ </form>
+ <h2>Supresión inmediata</h2>
+ <form action="/cgi-bin/koha/opac-privacy.pl" method="post" id="opac-privacy-delete-form">
+ <input type="hidden" name="op" value="delete_record" />
+ <p>Independientemente de que regla de privacidad elija, puede eliminar su historial lectura inmediatamente haciendo clic aquí. <b>SEA CUIDADOSO</b>. Una vez haya confirmado la eliminación, nadie podrá recuperar la lista!</p>
+ <input class="btn btn-danger" type="submit" onclick="return confirmDelete(MSG_CONFIRM_AGAIN);" value="Supresión inmediata" />
+ </form>
+ [% IF Koha.Preference('StoreLastBorrower') %]<p id="store-last-borrower-msg">Por favor note, a la última persona en devolver un ítem se le hace un seguimiento por ítems regresados con daños.</p>[% END %]
+ [% END # / IF Ask_data %]
+ </div> <!-- / .userprivacy -->
+ </div> <!-- / .span10 -->
+ </div> <!-- / .row-fluid -->
+ </div> <!-- / .container-fluid -->
+</div> <!-- / .main -->
+
+[% INCLUDE 'opac-bottom.inc' %]
+[% BLOCK jsinclude %][% END %]

@@ -1,0 +1,70 @@
+[% USE Koha %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Catálogo en línea[% END %] Koha &rsaquo; Cambie su contraseña</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% BLOCK cssinclude %][% END %]
+</head>
+[% INCLUDE 'bodytag.inc' bodyid='opac-passwd' %]
+[% INCLUDE 'masthead.inc' %]
+
+<div class="main">
+ <ul class="breadcrumb">
+ <li><a href="/cgi-bin/koha/opac-main.pl">Inicio</a> <span class="divider">&rsaquo;</span></li>
+ <li><a href="/cgi-bin/koha/opac-user.pl">[% firstname %] [% surname %]</a> <span class="divider">&rsaquo;</span></li>
+ <li><a href="#">Cambie su contraseña</a></li>
+ </ul>
+
+ <div class="container-fluid">
+ <div class="row-fluid">
+ <div class="span2">
+ <div id="navigation">
+ [% INCLUDE 'navigation.inc' IsPatronPage=1 %]
+ </div>
+ </div>
+ <div class="span10">
+ <div id="userpasswd">
+ <h3>Cambie su contraseña </h3>
+
+ [% IF ( Error_messages ) %]
+ <div class="alert">
+ <h3>Hubo un problema con su envío</h3>
+ <p>
+ [% IF ( PassMismatch ) %] Las contraseñas no coinciden. Por favor reingrese su nueva contraseña. [% END %] [% IF ( ShortPass ) %] Su nueva contraseña debe tener al menos [% minpasslen %] caracteres de longitud. [% END %] [% IF ( WrongPass ) %] Su contraseña actual fue introducida incorrectamente. Si este problema persiste, por favor pida al bibliotecario que restablezca la contraseña por usted. [% END %] [% IF PasswordContainsTrailingSpaces %] Su contraseña contiene espacios iniciales y/o finales. [% END %] </p>
+ </div>
+ [% END # /IF Error_messages %]
+
+ [% IF ( OpacPasswordChange ) %]
+ [% IF ( Ask_data ) %]
+ <form action="/cgi-bin/koha/opac-passwd.pl" name="mainform" id="mainform" method="post">
+ <fieldset>
+ [% UNLESS ( ShortPass ) %]<div class="alert alert-info">Su contraseña debe tener al menos [% minpasslen %] caracteres de largo.</div>[% END %]
+ <label for="Oldkey">Contraseña actual:</label> <input type="password" id="Oldkey" size="25"  name="Oldkey" />
+ <label for="Newkey">Nueva contraseña:</label> <input type="password" id="Newkey"  size="25"  name="Newkey" />
+ <label for="Confirm">Reingrese nueva contraseña:</label> <input type="password"  id="Confirm" size="25" name="Confirm" />
+ </fieldset>
+ <fieldset class="action"><input class="btn" type="submit" value="Enviar cambios" /> <a href="/cgi-bin/koha/opac-user.pl" class="cancel">Cancelar</a></fieldset>
+ </form>
+ [% END # /IF Ask_data %]
+ [% ELSE %]
+ <div class="alert">No puede cambiar su contraseña.</div>
+ [% END # /IF OpacPasswordChange %]
+
+ [% IF ( password_updated ) %]
+ <div class="alert alert-success">
+ <h1>Contraseña actualizada</h1>
+ Su contraseña ha sido cambiada </div>
+ <form action="/cgi-bin/koha/opac-user.pl" method="post">
+ <input type="hidden" name="borrowernumber" value="[% borrowernumber %]" />
+ <p><input class="btn" type="submit" value="Volver a su registro" /></p>
+ </form>
+ [% END # /IF password_updated %]
+ </div> <!-- / #userpasswd -->
+ </div> <!-- / .span10 -->
+ </div> <!-- / .row-fluid -->
+ </div> <!-- / .container-fluid -->
+</div> <!-- / .main -->
+
+
+
+[% INCLUDE 'opac-bottom.inc' %]
+[% BLOCK jsinclude %][% END %]

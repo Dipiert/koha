@@ -1,0 +1,118 @@
+[% USE Koha %]
+[% USE Branches %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Catálogo en línea[% END %] Koha</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% BLOCK cssinclude %][% END %]
+</head>
+[% INCLUDE 'bodytag.inc' bodyid='opac-main' %]
+[% INCLUDE 'masthead.inc' %]
+
+<div class="main">
+ <ul class="breadcrumb">
+ <li><a href="#">Inicio</a></li>
+ </ul>
+
+ [% IF Koha.Preference( 'opacuserlogin' ) == 1 %]
+ [% IF ( loggedinusername ) %]
+ <div id="loggedin" class="container-fluid">
+ [% ELSE %]
+ <div id="notloggedin" class="container-fluid">
+ [% END %]
+ [% ELSE %]
+ <div id="notloggedin" class="container-fluid">
+ [% END %]
+
+ <div class="row-fluid">
+ [% IF ( OpacNav ||  OpacNavBottom ) %]
+ <div class="span2">
+ <div id="navigation">
+ [% INCLUDE 'navigation.inc' %]
+ </div>
+ </div>
+ [% END %]
+
+ [% IF ( OpacNav ||  OpacNavBottom  ) %]
+ <div class="span7">
+ [% ELSE %]
+ <div class="span9">
+ [% END %]
+
+ [% IF ( koha_news_count ) %]
+ <div id="news" class="newscontainer">
+ [% SET newsdisp = ( Koha.Preference('NewsAuthorDisplay') ) %]
+ [% FOREACH koha_new IN koha_news %]
+ <div class="newsitem">
+ <a name="newsitem[% koha_new.idnew %]"></a><h4 class="newsheader">[% koha_new.title %]</h4>
+ <div class="newsbody">[% koha_new.new %]</div>
+ <div class="newsfooter">(publicado en  [% koha_new.newdate %][% IF ( (newsdisp == 'opac' || newsdisp == 'both') && koha_new.borrowernumber ) %] por <span class="newsauthor_title">[% koha_new.author_title %] </span>[% koha_new.author_firstname %] [% koha_new.author_surname %][% END %])</div>
+ </div>
+ [% END %]
+ </div>
+ <div id="rssnews-container">
+ <!-- Logged in users have a branch code or it could be explicitly set -->
+ <a href="[% OPACBaseURL %]/cgi-bin/koha/opac-news-rss.pl?branchcode=[% branchcode %]"><img src="[% interface %]/[% theme %]/images/feed-icon-16x16.png"></a>
+ Feed RSS para [% IF ( branchcode ) %][% Branches.GetName( branchcode ) %] <i>y</i> [% END %] las noticias de biblioteca de todo el sistema. </div>
+ [% END %]
+
+ [% IF ( display_daily_quote && daily_quote ) %]
+ <div id="daily-quote">
+ <h3>Frase del Día</h3>
+ <div>
+ <span id="daily-quote-text">[% daily_quote.text %]</span><span id="daily-quote-sep"> ~ </span><span id="daily-quote-source">[% daily_quote.source %]</span>
+ </div>
+ </div>
+ [% END %]
+
+ [% IF ( OpacMainUserBlock ) %]<div id="opacmainuserblock">[% OpacMainUserBlock %]</div>[% END %]
+ </div> <!-- / .span 7/9 -->
+
+ [% IF ( ( Koha.Preference( 'opacuserlogin' ) == 1 ) || OpacNavRight ) %]
+ <div class="span3">
+ [% IF Koha.Preference( 'opacuserlogin' ) == 1 %]
+ [% UNLESS ( loggedinusername ) %]
+ [% UNLESS ( casAuthentication || shibbolethAuthentication ) %]
+ <div id="login">
+ <form action="/cgi-bin/koha/opac-user.pl" method="post" name="auth" id="auth">
+ <input type="hidden" name="koha_login_context" value="opac" />
+ <fieldset class="brief">
+ <legend>Ingrese a su cuenta:</legend>
+ <label for="userid">Usuario:</label><input type="text" id="userid" name="userid" />
+ <label for="password">Contraseña:</label><input type="password" id="password" name="password" />
+ <fieldset class="action">
+ <input value="Ingresar" type="submit" class="btn" />
+ </fieldset>
+ [% IF PatronSelfRegistration && PatronSelfRegistrationDefaultCategory %]<div id="patronregistration"><p>¿No tiene una cuenta? <a href="/cgi-bin/koha/opac-memberentry.pl">Registrarse aquí.</a></p></div>[% END %]
+ </fieldset>
+ [% IF Koha.Preference('OpacPasswordChange') && Koha.Preference('OpacResetPassword') %]
+ <div id="forgotpassword">
+ <a href="/cgi-bin/koha/opac-password-recovery.pl">¿Olvidó su contraseña?</a>
+ </div>
+ [% END %]
+ [% IF Koha.Preference( 'NoLoginInstructions' ) %]
+ <div id="nologininstructions-main">
+ [% Koha.Preference( 'NoLoginInstructions' ) %]
+ </div>
+ [% END %]
+ </form>
+ </div> <!-- /#login -->
+ [% END # /casAuthentication %]
+ [% IF persona %]
+ <a href="#" class="persona-button" id="browserid" ><span>Ingrese con su email</span></a>
+ [% END # /persona %]
+ [% END # / loggedinusername %]
+ [% END # /opacuserlogin %]
+ [% IF ( OpacNavRight ) %]
+ <div id="opacnavright">
+ [% OpacNavRight %]
+ </div>
+ [% END # /OpacNavRight %]
+ </div> <!-- / .span3 -->
+ [% END # /opacuserlogin || OpacNavRight %]
+
+ </div> <!-- /.container-fluid -->
+ </div> <!-- /.row-fluid -->
+</div> <!-- /.main -->
+
+[% INCLUDE 'opac-bottom.inc' %]
+[% BLOCK jsinclude %][% END %]

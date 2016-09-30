@@ -1,0 +1,393 @@
+package C4::Visitas;
+#mm
+use strict;
+use C4::Context;
+use C4::Members;
+
+use C4::Dates qw(format_date_in_iso);
+use Digest::MD5 qw(md5_base64);
+use Date::Calc qw/Today Add_Delta_YM/;
+use DBI;
+use Data::Dumper; 
+use C4::Log; # logaction
+use C4::Overdues;
+use C4::Reserves;
+use C4::Accounts;
+use C4::Biblio;
+
+
+our ($VERSION,@ISA,@EXPORT,@EXPORT_OK,$debug);
+BEGIN {
+	$VERSION = 3.02;
+	$debug = $ENV{DEBUG} || 0;
+	require Exporter;
+	@ISA = qw(Exporter);
+	#Get data
+    push @EXPORT, qw(Getvisitante);
+    push @EXPORT, qw(PutUsuario);
+    push @EXPORT, qw(PutVisita);
+    push @EXPORT, qw(VisitasdeHoy);
+    push @EXPORT, qw(VisitasdelMes);
+    push @EXPORT, qw(VisitasMes);
+    push @EXPORT, qw(Mes);
+    push @EXPORT, qw(CodigosPostales);
+    push @EXPORT, qw(datosvisitante);
+    push @EXPORT, qw(actividades);
+    push @EXPORT, qw(foto);
+    push @EXPORT, qw(Grupos);
+    push @EXPORT, qw(PutActividad);
+
+	
+}
+
+sub CodigosPostales {
+    my $dbh   = C4::Context->dbh;
+    my $query = "";
+    my $count;
+    my @data;
+    my @bind = ();
+	 $query = "SELECT id,descripcion,cp FROM localidades
+	           WHERE id NOT IN (104, 20) ORDER BY descripcion";
+	 my $sth = $dbh->prepare($query);
+	 $sth->execute();
+	my $data = $sth->fetchall_arrayref({});
+    if (@$data){
+        return ( scalar(@$data), $data );
+    }
+    $sth->finish;
+}
+
+
+sub Grupos {
+	my $dbh   = C4::Context->dbh;
+    my $query = "";
+    my @data;
+	$query = "SELECT id, tipo_grupo FROM visita_tgrupo";
+	my $sth = $dbh->prepare($query);
+	$sth->execute();
+	my $data = $sth->fetchall_arrayref({});
+    if (@$data){
+        return ( scalar(@$data), $data );
+    }
+    $sth->finish;
+}
+
+sub Getvisitante {
+	my ( $borrowercard ) = "26673540"; #@_
+
+	my $dbh = C4::Context->dbh;
+	my $query;
+	my $sth;
+	my $row;
+	my $bn;
+ 	$sth = $dbh->prepare("select borrowernumber from borrowers where  cardnumber=?");
+        $sth->execute($borrowercard);
+	if (( $borrowercard ne '' ) && ( $row = $sth->fetchrow_hashref )){
+		$bn =  $row->{'borrowernumber'};
+	}else{
+		$bn =  0;	
+	}
+return $bn ;
+}
+
+sub foto{
+	my ($cardnumber) = @_;
+	my $dbh = C4::Context->dbh;
+	my $query;
+	my $sth;
+	my $row;
+	my $bn;
+ 	$sth = $dbh->prepare("select count(*) as cantidad from patronimage where  cardnumber=?");
+	$sth->execute($cardnumber);
+	if (( $cardnumber ne '' ) && ( $row = $sth->fetchrow_hashref )){
+		$bn = $row->{'cantidad'};
+	}else{
+		$bn = 0;
+	}
+return $bn ;
+}
+
+sub datosvisitante{
+	my ($borrowernumber) = @_;
+	my $dbh = C4::Context->dbh;
+	my $query;
+	my $sth;
+	my $row;
+	my $firstname;
+	my $lastname;
+	$sth = $dbh->prepare("SELECT firstname,surname from borrowers where  borrowernumber = ?");
+	$sth->execute($borrowernumber);
+	$row = $sth->fetchrow_hashref;
+	$firstname = $row->{'firstname'};
+	$lastname = $row->{'surname'};
+	return ($firstname,$lastname);
+
+}
+
+sub PutUsuario {    
+   	my ( $dni,$nombre,$apellido,$cp,$email,$barrio,$direccion ) = @_;
+
+	my $dbh = C4::Context->dbh;
+	my $query;
+	my $sth;
+	my $row;
+
+	my ($seg, $min, $hora, $dia, $mes, $anho) = localtime(time);
+	$mes++;
+	$anho+=1900;
+	my $fecha_actual= "$anho-$mes-$dia";
+
+	my $fechae = $anho+1 ."-".$mes."-".$dia;
+	my $categoria = "GE";
+	my $branchcode = "bpm";
+	my $afiliado = "N";
+	my $borrowernumber;
+
+	$query = "select borrowernumber from borrowers where  cardnumber=?";
+	$sth = $dbh->prepare($query);
+        $sth->execute($dni);
+
+	if (( $dni ne '' ) &&  !( $row = $sth->fetchrow_hashref )){
+		$query = "INSERT INTO borrowers (cardnumber,surname,firstname,zipcode,email,afiliado,categorycode,dateexpiry,branchcode,barrio,dateenrolled,address) 
+				VALUES (
+					". $dbh->quote($dni).",
+					". $dbh->quote($apellido).",
+					". $dbh->quote($nombre).",
+					". $dbh->quote($cp).",
+					". $dbh->quote($email).",
+					". $dbh->quote($afiliado).",
+					". $dbh->quote($categoria).",
+					". $dbh->quote($fechae).",
+					". $dbh->quote($branchcode).",
+					". $dbh->quote($barrio).",
+					". $dbh->quote($fecha_actual).",
+					". $dbh->quote($direccion)."
+					) ";
+	}
+    my $datos;
+    $datos = $query;
+    my $sql = "INSERT INTO log (action) values (?)";
+    
+    
+    
+    my $sth2 = $dbh->prepare($sql);
+    $sth2->execute($datos);
+    $sth2->finish;
+
+
+
+     my $sth = $dbh->prepare($query);
+    
+     $sth->execute();
+     $sth->finish;
+    
+     $borrowernumber     = $dbh->{'mysql_insertid'};     # unneeded w/ autoincrement ?  
+     return $borrowernumber;
+    
+}
+
+sub PutActividad {
+	my ($idvisita,$idactividad) = @_;
+	my $dbh = C4::Context->dbh;
+	my $query;
+	my $sth;
+
+	$query = "INSERT INTO visitas_actividades (idvisita,idactividades) values  (". $dbh->quote($idvisita).",".$dbh->quote($idactividad).")";
+	my $sth = $dbh->prepare($query);
+    #   print "Executing SQL: $query\n";
+     $sth->execute();
+     $sth->finish;
+	
+}
+
+sub PutVisita {
+# borrowernumber,fecha,tipo,cantidadpersonas,observaciones 
+#Telefono
+#Codigo Postal
+#Correo Electronico
+#Grado
+#id_tgrupo
+#direccion   ....del establecimiento
+   	my ( $borrowernumber,$tipo,$cantidadpersonas,$observaciones,$nombreestablecimiento,$telefono,$cp,$email,$grado, $id_tgrupo, $direccion,$responsable ) = @_;
+
+	my $dbh = C4::Context->dbh;
+	my $query;
+	my $sth;
+	my $row;
+	my $idvisita;
+	$query = "INSERT INTO visitas (borrowernumber,tipo,cantidadpersonas,observaciones,nombre_establecimiento,telefono,codigo_postal,email,grado, id_tgrupo, direccion,responsable ) VALUES (
+			". $dbh->quote($borrowernumber).",		
+			". $dbh->quote($tipo).",
+			". $dbh->quote($cantidadpersonas).",
+			". $dbh->quote($observaciones).",
+			". $dbh->quote($nombreestablecimiento).",
+			". $dbh->quote($telefono).",
+			". $dbh->quote($cp).",
+			". $dbh->quote($email).",
+			". $dbh->quote($grado).",
+			". $dbh->quote($id_tgrupo).",
+			". $dbh->quote($direccion).",
+			". $dbh->quote($responsable)."
+			)";
+	    my $sth = $dbh->prepare($query);
+    #   print "Executing SQL: $query\n";
+     $sth->execute();
+     $sth->finish;
+    #$data{'borrowernumber'} = $dbh->{'mysql_insertid'};     # unneeded w/ autoincrement ?  
+     $idvisita     = $dbh->{'mysql_insertid'};     # unneeded w/ autoincrement ?  
+     return $idvisita;
+
+}
+
+=head metodo anterior
+sub PutVisita {
+		# borrowernumber,fecha,tipo,cantidadpersonas,observaciones 
+#Telefono
+#Codigo Postal
+#Correo Electronico
+#Grado
+   	my ( $borrowernumber,$tipo,$cantidadpersonas,$observaciones,$nombreestablecimiento,$telefono,$cp,$email,$grado ) = @_;
+
+	my $dbh = C4::Context->dbh;
+	my $query;
+	my $sth;
+	my $row;
+	my $idvisita;
+	$query = "INSERT INTO visitas (borrowernumber,tipo,cantidadpersonas,observaciones,nombre_establecimiento,telefono,codigo_postal,email,grado ) VALUES (
+			". $dbh->quote($borrowernumber).",		
+			". $dbh->quote($tipo).",
+			". $dbh->quote($cantidadpersonas).",
+			". $dbh->quote($observaciones).",
+			". $dbh->quote($nombreestablecimiento).",
+			". $dbh->quote($telefono).",
+			". $dbh->quote($cp).",
+			". $dbh->quote($email).",
+			". $dbh->quote($grado)."
+			)";
+	    my $sth = $dbh->prepare($query);
+    #   print "Executing SQL: $query\n";
+     $sth->execute();
+     $sth->finish;
+    #$data{'borrowernumber'} = $dbh->{'mysql_insertid'};     # unneeded w/ autoincrement ?  
+     $idvisita     = $dbh->{'mysql_insertid'};     # unneeded w/ autoincrement ?  
+     return $idvisita;
+
+}
+
+=cut
+
+
+sub VisitasdeHoy{
+    my $dbh   = C4::Context->dbh;
+    my $query = "";
+    my $count;
+    my @data;
+    my @bind = ();
+	 $query = "SELECT * FROM vw_visitas_de_hoy";
+	 my $sth = $dbh->prepare($query);
+	 $sth->execute();
+	my $data = $sth->fetchall_arrayref({});
+    if (@$data){
+        return ( scalar(@$data), $data );
+    }
+    $sth->finish;
+}
+
+sub actividades {
+    my $dbh   = C4::Context->dbh;
+    my $query = "";
+    my $count;
+    my @data;
+    my @bind = ();
+	$query = "select * from vw_actividades_time";
+	 my $sth = $dbh->prepare($query);
+	 $sth->execute();
+	 my $data = $sth->fetchall_arrayref({});
+         if (@$data){
+            return ( scalar(@$data), $data );
+         }
+         $sth->finish;
+}
+sub VisitasdelMes{	
+    my $dbh   = C4::Context->dbh;
+    my $query = "";
+    my $count;
+    my @data;
+    my @bind = ();
+	 $query = "SELECT * FROM  vw_visitas_del_mes";
+	 my $sth = $dbh->prepare($query);
+	 $sth->execute();
+	my $data = $sth->fetchall_arrayref({});
+    if (@$data){
+        return ( scalar(@$data), $data );
+    }
+    $sth->finish;
+}
+sub VisitasMes{
+    my ( $mes ) = @_;
+    my $dbh   = C4::Context->dbh;
+    my $query = "";
+    my $count;
+    my @data;
+    my @bind = ();
+	 $query = "SELECT 'Particulares' AS `tipo` , sum( `visitas`.`cantidadpersonas` ) AS `cantidad`
+FROM `visitas`
+WHERE date_format( `visitas`.`fecha` , '%y' ) = date_format( curdate( ) , '%y' )
+AND date_format( `visitas`.`fecha` , '%m' ) = '$mes'
+AND `visitas`.`tipo` = 'P'
+GROUP BY `visitas`.`tipo`
+UNION
+SELECT 'Grupos' AS `tipo` , sum( `visitas`.`cantidadpersonas` ) AS `cantidad`
+FROM `visitas`
+WHERE date_format( `visitas`.`fecha` , '%y' ) = date_format( curdate( ) , '%y' )
+AND date_format( `visitas`.`fecha` , '%m' ) = '$mes'
+AND `visitas`.`tipo` = 'G'
+GROUP BY `visitas`.`tipo`
+UNION
+SELECT 'Total' AS `tipo` , sum( `visitas`.`cantidadpersonas` ) AS `cantidad`
+FROM `visitas`
+WHERE date_format( `visitas`.`fecha` , '%y' ) = date_format( curdate( ) , '%y' )
+AND date_format( `visitas`.`fecha` , '%m' ) = '$mes'";
+
+	 my $sth = $dbh->prepare($query);
+	 $sth->execute();
+	my $data = $sth->fetchall_arrayref({});
+    if (@$data){
+        return ( scalar(@$data), $data );
+    }
+    $sth->finish;
+}
+
+sub Mes {
+	my ( $mes ) = @_;
+	my $m = "";
+	if ($mes == "01"){
+	   $m = "Enero";
+	}elsif($mes == "02"){
+	   $m = "Febrero";
+	}elsif ($mes == "03"){
+           $m = "Marzo";
+	}elsif ($mes == "04"){
+	   $m = "Abril";
+	}elsif ($mes == "05"){
+	   $m = "Mayo";
+	}elsif ($mes == "06"){
+	   $m = "Junio";
+	}elsif ($mes == "07"){
+	   $m = "Julio";
+	}elsif ($mes == "08"){
+	   $m = "Agosto";
+	}elsif ($mes == "09"){
+	   $m = "Septiembre";
+	}elsif ($mes == "10"){
+	   $m = "Octubre";
+	}elsif ($mes == "11"){
+	   $m = "Noviembre";
+	}elsif ($mes == "12"){
+	   $m = "Diciembre";
+	}else{
+	   $m ="";
+	}
+	return $m;
+}
+return 1;

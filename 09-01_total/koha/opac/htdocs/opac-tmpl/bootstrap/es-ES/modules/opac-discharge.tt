@@ -1,0 +1,52 @@
+[% USE Koha %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Catálogo en línea[% END %] Koha &rsaquo; Generar libre de deuda</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% BLOCK cssinclude %][% END %]
+</head>
+<body id="opac-discharge" class="scrollto">
+[% INCLUDE 'masthead.inc' %]
+
+<div class="main">
+ <ul class="breadcrumb">
+ <li><a href="/cgi-bin/koha/opac-main.pl">Inicio</a> <span class="divider">&rsaquo;</span></li>
+ <li><a href="#">Generar libre de deuda</a></li>
+ </ul>
+
+ <div class="container-fluid">
+ <div class="row-fluid">
+ <div class="span2">
+ <div id="navigation">
+ [% INCLUDE 'navigation.inc' IsPatronPage=1 %]
+ </div>
+ </div>
+ <div class="span10">
+ <div id="discharge" class="maincontainer">
+ <h1>Generar libre de deuda</h1>
+ [% FOR message IN messages %]
+ <div class="dialog [% message.type %]">
+ [% IF message.code == "unable_to_generate_pdf" %] Un error ha ocurrido cuando se generaba el archivo pdf. Por favor, póngase en contacto con el personal para resolver este problema. [% END %] </div>
+ [% END %]
+
+ [% IF success %]
+ <p>La petición de la generación de la liberación de deuda ha sido enviada. Su liberación de deuda estará disponible en esta página dentro de unos pocos días.</p>
+ [% ELSIF available %]
+ <a href="/cgi-bin/koha/opac-discharge.pl?op=get">Obtenga su generación libre de deuda</a></li>
+ [% ELSIF pending %]
+ <p>Su liberación de deuda estará disponible en esta página dentro de unos pocos días.</p>
+ [% ELSIF has_issues %]
+ <p>No se le puede generar la liberación de la deuda, usted tiene préstamos. Por favor, regrese los ítems antes de pedir que se le genere la liberación de la deuda.</p>
+ [% ELSIF not messages %]
+ <h2>¿Qué es una generación libre de deuda?</h2>
+ <p>Este documento certifica que usted ha regresado todos los ítems que ha pedido prestados. Se pregunta a veces durante una transferencia de archivos de una escuela a otra. La generación libre de deuda es enviada por nosotros a su escuela. También lo encontrará disponible en su cuenta de lector.</p>
+ <p><strong>Advertencia</strong>: Esta solicitud es válida solamente si usted se encuentra en buena situación con la biblioteca. Una vez que se presente la solicitud, usted no puede pedir prestado materiales a la biblioteca.</p>
+ <a href="/cgi-bin/koha/opac-discharge.pl?op=request">Pregunte por la generación de libre de deuda</a>
+ [% END %]
+ </div> <!-- / #discharge -->
+ </div> <!-- / .span10 -->
+ </div> <!-- / .row-fluid -->
+ </div> <!-- / .container-fluid -->
+</div> <!-- / .main -->
+
+[% INCLUDE 'opac-bottom.inc' %]
+[% BLOCK jsinclude %][% END %]

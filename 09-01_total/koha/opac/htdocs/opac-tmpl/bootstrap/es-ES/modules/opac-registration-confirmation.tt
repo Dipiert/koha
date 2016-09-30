@@ -1,0 +1,98 @@
+[% USE Koha %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Catálogo en línea[% END %] Koha</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% BLOCK cssinclude %][% END %]
+</head>
+[% INCLUDE 'bodytag.inc' bodyid='opac-main' %]
+[% INCLUDE 'masthead.inc' %]
+
+ <div class="main">
+ <ul class="breadcrumb">
+ <li><a href="/cgi-bin/koha/opac-main.pl">Inicio</a> <span class="divider">&rsaquo;</span></li>
+ <li><a href="#">Registro completado</a></li>
+ </ul>
+
+ <div class="container-fluid">
+ <div class="row-fluid">
+ [% IF ( OpacNav || OpacNavBottom ) %]
+ <div class="span2">
+ <div id="navigation">
+ [% INCLUDE 'navigation.inc' %]
+ </div>
+ </div>
+ [% END %]
+
+ [% IF ( OpacNav ||  OpacNavBottom ) %]
+ <div class="span7">
+ [% ELSE %]
+ <div class="span9">
+ [% END %]
+
+ <div id="registration-complete">
+ <h1>¡Registro completo!</h1>
+
+ <p>Ha registrado exitosamente su nueva cuenta. Para ingresar, utilice las siguientes credenciales:</p>
+
+ <p id="patron-userid-p">
+ <span id="patron-userid-label">Nombre de usuario:</span>
+ <span id="patron-userid">[% borrower.userid %]</span>
+ </p>
+ <p id="patron-password-p">
+ <span id="patron-password-label">Contraseña:</span>
+ <span id="patron-password">[% password_cleartext %]<span>
+ </p>
+
+ [% IF borrower.cardnumber %]
+ <p id="patron-cardnumber-p">
+ <span id="patron-cardnumber-label">Número de carné:</span>
+ <span id="patron-cardnumber">[% borrower.cardnumber %]</span>
+ </p>
+ [% END %]
+
+ <p id="patron-instructions">Para su comodidad, el cuadro de ingreso en esta página ha sido rellenado con estos datos. Por favor ingrese a[% IF OpacPasswordChange %] y cambien su contraseña[% END %].</p>
+
+ <div id="PatronSelfRegistrationAdditionalInstructions">[% PatronSelfRegistrationAdditionalInstructions %]</div>
+ </div>
+
+ </div> <!-- / .span7/9 -->
+
+ [% IF ( ( Koha.Preference( 'opacuserlogin' ) == 1 ) || OpacNavRight ) %]
+ <div class="span3">
+ [% IF Koha.Preference( 'opacuserlogin' ) == 1 %]
+ [% UNLESS ( loggedinusername ) %]
+ [% UNLESS ( casAuthentication ) %]
+ <div id="login">
+ <form action="/cgi-bin/koha/opac-user.pl" method="post" name="auth" id="auth">
+ <input type="hidden" name="koha_login_context" value="opac" />
+ <fieldset class="brief">
+ <legend>Ingrese a su cuenta:</legend>
+ <label for="userid">Usuario:</label><input type="text" id="userid" size="10" name="userid" value="[% borrower.userid %]" />
+ <label for="password">Contraseña:</label><input type="password" id="password" size="10" name="password" value="[% password_cleartext %]" />
+ <fieldset class="action">
+ <input class="btn" type="submit" value="Ingresar" />
+ </fieldset>
+ [% IF PatronSelfRegistration && PatronSelfRegistrationDefaultCategory %]<div id="patronregistration"><p>¿No tiene una cuenta? <a href="/cgi-bin/koha/opac-memberentry.pl">Registrarse aquí.</a></p></div>[% END %]
+ </fieldset>
+ </form>
+ </div> <!-- /#login -->
+ [% END # /casAuthentication %]
+ [% IF persona %]
+ <a href="#" class="persona-button" id="browserid" ><span>Ingrese con su email</span></a>
+ [% END # /persona %]
+ [% END # / loggedinusername %]
+ [% END # /opacuserlogin %]
+ [% IF ( OpacNavRight ) %]
+ <div id="opacnavright">
+ [% OpacNavRight %]
+ </div>
+ [% END # /OpacNavRight %]
+ </div> <!-- / .span3 -->
+ [% END # /opacuserlogin || OpacNavRight %]
+
+ </div> <!-- /.row-fluid -->
+ </div> <!-- /.container-fluid -->
+ </div> <!-- /.main -->
+
+[% INCLUDE 'opac-bottom.inc' %]
+[% BLOCK jsinclude %][% END %]

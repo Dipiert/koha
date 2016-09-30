@@ -1,0 +1,5 @@
+[%# This template is called only for a very simple error message %]
+<html>
+<body id="opac-retrieve-file" class="scrollto">
+Su búsqueda [% IF hash %]para [% hash %][% END %] no fue exitosa. </body>
+</html>

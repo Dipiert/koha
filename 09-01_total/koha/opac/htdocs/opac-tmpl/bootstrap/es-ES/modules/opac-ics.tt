@@ -1,0 +1,1 @@
+[%# First line will be summary, second line will be description. Avoid indenting. -%] [%- IF overdue == 1 -%] [% title %] esta en retraso Su copia de [% title %] (código de barras [% barcode %]) esta en retraso [%- ELSE -%] [% title %] esta vencida Su copia de [% title %] (barcode [% barcode %]) esta vencida se debe volver a la biblioteca hoy [%- END -%] 

@@ -1,0 +1,79 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Catálogo en línea[% END %] Koha &rsaquo; Ha ocurrido un error</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% BLOCK cssinclude %][% END %]
+</head>
+<body id="error[% errno %]" class="error">
+[% INCLUDE 'masthead.inc' %]
+
+ <div class="main">
+ <ul class="breadcrumb">
+ <li><a href="/cgi-bin/koha/opac-main.pl">Inicio</a> <span class="divider">&rsaquo;</span></li>
+ <li><a href="#">Error [% errno %]</a></li>
+ </ul>
+
+ <div class="container-fluid">
+ <div class="row-fluid">
+ [% IF ( OpacNav || OpacNavBottom ) %]
+ <div class="span2">
+ <div id="navigation">
+ [% INCLUDE 'navigation.inc' %]
+ </div>
+ </div>
+ <div class="span10">
+ [% ELSE %]
+ <div class="span12">
+ [% END %]
+ <div id="errormsg[% errno %]">
+ <h3>Lo sentimos, la página solicitada no se encuentra disponible</h3>
+ <h4>Error [% errno %]</h4>
+ <h3>Este mensaje puede tener la(s) razón(es) siguiente(s):</h3>
+ <ul>
+ [% IF ( errno == 400 ) %]
+ <li>El enlace está roto y la página no existe.</li>
+ [% END %]
+
+ [% IF ( errno == 401 ) %]
+ <li>No tiene autorización para ver esta página.</li>
+ [% END %]
+
+ [% IF ( errno == 402 ) %]
+ <li>El enlace no es válido.</li>
+ [% END %]
+
+ [% IF ( errno == 403 ) %]
+ <li>Tiene prohibido ver esta página.</li>
+ [% END %]
+
+ [% IF ( errno == 404 ) %]
+ <li>Usted ha hecho uso de un enlace externo a un ítem de catálogo que ya no está disponible.</li>
+ <li>Ha seguido un enlace antiguo, ejemplo, a partir de un motor de búsqueda o un marcador.</li>
+ <li>Ha intentado acceder a una página que requiere autenticación.</li>
+ <li>Un enlace interno en nuestra página web principal del catálogo se ​​ha roto y la página no existe.</li>
+ [% END %]
+ [% IF ( errno == 500 ) %]
+ <li>Ocurrió un error mientras se procesaba su solicitud.</li>
+ [% END %]
+ </ul>
+ <h3>¿Qué será lo próximo?</h3>
+ <ul>
+ [% IF ( errno == 401 ) && ( Koha.Preference( 'opacuserlogin' ) == 1 ) %]
+ <li>Por favor ingrese en el catálogo e intente nuevamente. <a href="/cgi-bin/koha/opac-user.pl">Página de inicio de sesión</a></li>
+ [% END %]
+ <li>Puede utilizar el menú y enlaces en el tope de la página</li>
+ <li>Puede buscar en el catálogo usando el formulario de búsqueda en la parte superior de esta página.</li>
+ <li><a href="/cgi-bin/koha/opac-main.pl">Regresar a la página principal del catálogo.</a></li>
+ </ul>
+ <h3>Informar sobre problemas y enlaces rotos</h3>
+ <ul>
+ <li>Para informar sobre este error, por favor, póngase en contacto con el Administrador de Koha. <a href="mailto:[% admin %]">Enviar correo</a>.</li>
+ </ul>
+ </div> <!-- / #errormsg[% errno %] -->
+ </div> <!-- / .span10/12 -->
+ </div> <!-- / .row-fluid -->
+ </div> <!-- / .container-fluid -->
+ </div> <!-- / .main -->
+
+[% INCLUDE 'opac-bottom.inc' %]
+[% BLOCK jsinclude %]
+[% END %]

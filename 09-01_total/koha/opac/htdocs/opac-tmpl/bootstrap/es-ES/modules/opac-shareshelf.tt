@@ -1,0 +1,106 @@
+[% USE Koha %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Catálogo en línea[% END %] Koha &rsaquo; Compartir una lista</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% BLOCK cssinclude %][% END %]
+</head>
+
+[% INCLUDE 'bodytag.inc' bodyid='opac-shareshelf' bodyclass='scrollto' %]
+[% INCLUDE 'masthead.inc' %]
+<div class="main">
+ <ul class="breadcrumb">
+ <li><a href="/cgi-bin/koha/opac-main.pl">Inicio</a> <span class="divider">&rsaquo;</span></li>
+ [% IF ( loggedinusername ) %]
+ <li><a href="/cgi-bin/koha/opac-user.pl">[% USER_INFO.title %] [% USER_INFO.firstname %] [% USER_INFO.surname %]</a> <span class="divider">&rsaquo;</span></li>
+ [% END %]
+ <li>Compartir una lista</li>
+ </ul> <!-- / .breadcrumb -->
+
+ <div class="container-fluid">
+ <div class="row-fluid">
+ [% IF ( OpacNav ) %]
+ <div class="span2">
+ <div id="navigation">
+ [% INCLUDE 'navigation.inc' IsPatronPage=1 %]
+ </div>
+ </div>
+ [% END %]
+
+[%# This section contains the essential code for error messages and three operations: invite, confirm_invite and accept. %]
+ <h2>Comparta una lista con otro usuario</h2>
+ <div class="span10">
+ <div id="shareshelf" class="maincontent">
+
+ [% IF errcode %]
+ [% IF errcode==1 && op %]<div class="alert">La operación [% op | html %] no es soportada.</div>[% END %]
+ [% IF errcode==1 && !op %]<div class="alert">Ningún parámetro de operación ha sido aprobado.</div>[% END %]
+ [% IF errcode==2 %]<div class="alert">Signatura topográfica inválida.</div>[% END %]
+ [% IF errcode==3 %]<div class="alert">La característica para poder compartir listas no está en uso en esta biblioteca.</div>[% END %]
+ [% IF errcode==4 %]<div class="alert">Sólo se puede compartir una lista si usted es el dueño.</div>[% END %]
+ [% IF errcode==5 %]<div class="alert">Usted no puede compartir una lista pública.</div>[% END %]
+ [% IF errcode==6 %]<div class="alert">Lo sentimos, pero no introdujo una dirección de correo electrónico válida.</div>[% END %]
+ [% IF errcode==7 %]<div class="alert">Lo sentimos, pero no podemos aceptar esta clave. La invitación puede haber expirado. Póngase en contacto con el usuario que le envió la invitación.</div>[% END %]
+ [% IF errcode==8 %]<div class="alert">Como propietario de una lista, usted no puede aceptar una invitación para compartirlo.</div>[% END %]
+ <p><a href="/cgi-bin/koha/opac-shelves.pl?op=list&amp;category=1">Regresar a sus listas</a></p>
+
+ [% ELSIF op=='invite' %]
+ <div id="invite">
+ <form id="share_list">
+ <fieldset class="rows">
+ <ol>
+ <input type="hidden" name="op" value="conf_invite"/>
+ <input type="hidden" name="shelfnumber" value="[% shelfnumber %]"/>
+ <li><label for="name">Nombre de la lista:</label> [% shelfname | html %]</li>
+ <li>
+ <label for="invite_address">Correo electrónico:</label>
+ <input id="invite_address" name="invite_address" size="40" />
+ </li>
+ </ol>
+ </fieldset>
+ <fieldset class="action">
+ <input value="Enviar" class="btn" type="submit" />
+ <a href="/cgi-bin/koha/opac-shelves.pl?op=list&amp;category=1" class="cancel">Cancelar</a>
+ </fieldset>
+ </form>
+ </div>
+
+ [% ELSIF op=='conf_invite' %]
+ <div id="conf_invite">
+ [% IF approvedaddress %]
+ <p>Una invitación para compartir la lista <i>[% shelfname | html %]</i> se enviará en breve a [% approvedaddress %].</p>
+ [% END %]
+ [% IF failaddress %]
+ <p>Algo salió mal al procesar las siguientes direcciones. Por favor verifíquelas. Estas son: [% failaddress %]</p>
+ [% END %]
+ [% IF approvedaddress %]
+ <p>Usted recibirá una notificación por correo electrónico si alguien acepta lo que compartió dentro de dos semanas.</p>
+ [% END %]
+ <p><a href="/cgi-bin/koha/opac-shelves.pl?op=list&amp;category=1">Regresar a sus listas</a></p>
+ </div>
+
+ [% ELSIF op=='accept' %]
+ [%# Nothing to do: we already display an error or we redirect. %]
+ [% END %]
+
+ </div> <!-- / .span10 -->
+ </div> <!-- / .maincontent -->
+[%# End of essential part %]
+
+ </div> <!-- / .row-fluid -->
+ </div> <!-- / .container-fluid -->
+</div> <!-- / .main -->
+[% INCLUDE 'opac-bottom.inc' %]
+[% BLOCK jsinclude %]
+<script type="text/javascript">
+//<![CDATA[
+    $(document).ready(function(){
+        $("#share_list").on('submit', function(e) {
+            var address = $("#invite_address").val();
+            if ( address.length == 0) {
+                e.preventDefault();
+            }
+        });
+    });
+//]]>
+</script>
+[% END %]
